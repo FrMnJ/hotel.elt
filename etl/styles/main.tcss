@@ -1,0 +1,12 @@
+#form-container{
+    padding: 1;
+}
+
+#button-container{
+    align: center middle;
+    height: 3;
+}
+
+#log-container{
+    padding: 1;
+}
