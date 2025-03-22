@@ -1,5 +1,5 @@
 from command import Command
-from etl.etl_factory import ETLFactory
+from etl_factory import ETLFactory
 
 class ETL(Command):
     def __init__(self, logger, etl_factory: ETLFactory):
