@@ -4,14 +4,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Button, Input, Select, Log, Label
 from textual.logging import TextualHandler
 from textual.containers import Container
-
-
-OPTIONS = [
-    ("CSV", "csv"),
-    ("Excel", "xlsx"),
-    ("JSON", "json"),
-    ("SQL", "sql"),
-]
+from etl.output_save_options import OPTIONS
 
 logging.basicConfig(
     level="NOTSET",
