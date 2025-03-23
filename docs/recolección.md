@@ -16,9 +16,3 @@ Se encontró también otro conjunto en Hotel Dataset:
         https://www.kaggle.com/datasets/mashkuratualhassan/hotel-dataset
 Presenta características similares al anterior, pero en este las reservaciones se encuentran dentro del periodo de 3 años entre 2018 y 2020. 
 Los datos se encuentran en formato Excel (xlsx). 
-### Hotel booking demand
-Otro dataset similar 
-Los datos son originarios del artículo “ Hotel Booking Demand Datasets” por Nuno Antonio, Ana Almeida y Luis Nunes para Data in Brief, Volumen 22, febrero 2019.
-Los datos fueron descargados y limpiados por Thomas Mock y Antoine Bichat
-    https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand
-Este dataset está en formato csv y será convertido con la ayuda de la librería pandas a json. 
