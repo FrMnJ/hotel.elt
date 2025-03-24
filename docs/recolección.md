@@ -16,3 +16,6 @@ Se encontró también otro conjunto en Hotel Dataset:
         https://www.kaggle.com/datasets/mashkuratualhassan/hotel-dataset
 Presenta características similares al anterior, pero en este las reservaciones se encuentran dentro del periodo de 3 años entre 2018 y 2020. 
 Los datos se encuentran en formato Excel (xlsx). 
+### Hotel bookings data
+Se genero el tercer dataset de manera artificial en formato json. Los datos se encuentran
+dentro del periodo de 3 años entre 2022 y 2024.
