@@ -40,7 +40,7 @@ def generate_dirty_data(n=100):
         row = {
             "ADR": round(random.uniform(50, 500), 2) if not dirty else np.nan, 
             "Adults": random.randint(1, 5),
-            "Agent": random.choice(["TA123", "TO456", "AG789", np.nan]) if not dirty else "INVALID_AGENT",
+            "Agent": random.randint(1, 500),
             "ArrivalDateDayOfMonth": arrivalDayMonth,
             "ArrivalDateMonth": arrivalMonth,
             "ArrivalDateYear": arrivalYear, 
@@ -48,7 +48,7 @@ def generate_dirty_data(n=100):
             "Babies": random.randint(0, 2),
             "BookingChanges": random.randint(0, 5),
             "Children": random.randint(0, 3),
-            "Company": random.choice(["CompA", "CompB", "CompC", np.nan]),
+            "Company": random.randint(1, 100) if not dirty else np.nan,
             "Country": random.choice(["USA", "GBR", "FRA", "ESP", "INVALID_COUNTRY"] if dirty else ["USA", "GBR", "FRA"]),
             "CustomerType": random.choice(["Transient", "Contract", "Group", "Transient-party"]),
             "DaysInWaitingList": random.randint(0, 50),
