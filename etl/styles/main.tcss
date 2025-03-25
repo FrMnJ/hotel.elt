@@ -1,12 +1,13 @@
-#form-container{
+#form-container {
     padding: 1;
 }
 
-#button-container{
-    align: center middle;
-    height: 3;
+#button-container {
+    align: center middle; 
+    margin: 1 0; 
+    height: auto;
 }
 
-#log-container{
+#log-container {
     padding: 1;
 }
