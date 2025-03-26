@@ -1,4 +1,4 @@
-from extract_command import ExtractCommand
+from extract_all_datasets import ExtractAllDatasets
 from clean_data_command import CleanDataCommand
 from csv_load_command import CSVLoadCommand
 from excel_load_command import ExcelLoadCommand
@@ -18,7 +18,8 @@ class ETLFactoryImpl(ETLFactory):
 
     def get_extract(self):
         # Usar ExtractCommand para la fase de extracción
-        return ExtractCommand(self.logger, self.dataset_path)
+        return ExtractAllDatasets(self.logger)
+        
 
     def get_transform(self):
         # Usamos CleanDataCommand para la transformación

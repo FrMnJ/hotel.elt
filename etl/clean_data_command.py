@@ -1,87 +1,87 @@
 import pandas as pd
 from command import Command
+from extract_command import ExtractCommand
 
 class CleanDataCommand(Command):
-    def __init__(self, logger):
+    def __init__(self, logger, datasets: dict):
         super().__init__(logger)
+        self.datasets = datasets
 
-    def execute(self, data: pd.DataFrame):
-        try:
-            self.logger.write_line("Iniciando limpieza de datos...")
+    def execute(self):
+        self.logger.write_line("Limpiando hotel_booking_demand.csv...")
+        dataset1 = self.datasets['hotel_booking_demand.csv'] 
+        
+        # Eliminar los duplicados
+        dataset1.drop_duplicates(inplace=True)
 
-            # Normalizar los nombres de las columnas a minúsculas
-            data.columns = data.columns.str.lower()
-            self.logger.write_line("Nombres de columnas normalizados a minúsculas.")
+        # Eliminar los valores nulos
+        dataset1.dropna(inplace=True)
 
-            # Eliminar columnas innecesarias
-            columns_to_drop = ['reservationstatus', 'arrivaldateyear']  # Ejemplo de columnas a eliminar
-            for column in columns_to_drop:
-                if column in data.columns:
-                    data.drop(columns=[column], inplace=True)
-                    self.logger.write_line(f"Columna '{column}' eliminada.")
-                else:
-                    self.logger.write_line(f"La columna '{column}' no está presente en el dataset.")
+        # Mayores al promedio reemplazados por la media
+        dataset1.loc[dataset1['lead_time'] > dataset1['lead_time'].mean(), 'lead_time'] = int(dataset1['lead_time'].mean())
 
-            # Convertir celdas vacías o espacios en blanco en NaN
-            data.replace(r'^\s*$', pd.NA, regex=True, inplace=True)
-            self.logger.write_line("Celdas vacías convertidas a valores nulos (NaN).")
+        # Eliminar filas con 0 adultos y > 10
+        dataset1 = dataset1[(dataset1['adults'] > 0) | (dataset1['adults'] <= 10)]
 
-            # Reemplazar valores nulos según lo observado en los notebooks
-            columns_to_fill = {
-                'leadtime': 0,
-                'meal': 'SC',
-                'deposittype': 'No Deposit',
-                'agent': 0,
-                'company': 0,
-                'children': 0,
-                'country': 'Unknown',
-                'adr': 'mean'
-            }
-            for column, value in columns_to_fill.items():
-                if column in data.columns:
-                    if value == 'mean' and column == 'adr':
-                        mean_adr = data['adr'].mean()
-                        data['adr'].fillna(mean_adr, inplace=True)
-                        self.logger.write_line(f"Valores nulos en 'adr' reemplazados con el promedio: {mean_adr:.2f}.")
-                    else:
-                        data[column].fillna(value, inplace=True)
-                        self.logger.write_line(f"Valores nulos reemplazados en '{column}' con '{value}'.")
-                else:
-                    self.logger.write_line(f"La columna '{column}' no está presente en el dataset.")
+        # Eliminar files con más de 2 babies
+        dataset1.drop(dataset1[dataset1['babies'] > 2].index, inplace=True)
 
-            # Eliminar filas duplicadas
-            duplicates = data.duplicated().sum()
-            if duplicates > 0:
-                data.drop_duplicates(inplace=True)
-                self.logger.write_line(f"Se eliminaron {duplicates} filas duplicadas.")
-            else:
-                self.logger.write_line("No se encontraron filas duplicadas.")
+        # Eliminar Undefined en la columna meal
+        dataset1 = dataset1[dataset1['meal'] != 'Undefined']
 
-            # Renombrar columnas
-            rename_map = {
-                'adr': 'average_daily_rate',
-                'leadtime': 'lead_time'
-            }
-            data.rename(columns=rename_map, inplace=True)
-            self.logger.write_line(f"Columnas renombradas: {rename_map}")
+        # Eliminar Undefined en la columna market_segment
+        dataset1 = dataset1[dataset1['market_segment'] != 'Undefined']
 
-            # Crear nuevas columnas basadas en otras columnas
-            if 'staysinweekendnights' in data.columns and 'staysinweeknights' in data.columns:
-                data['totalnights'] = data['staysinweekendnights'] + data['staysinweeknights']
-                self.logger.write_line("Columna 'totalnights' creada sumando 'staysinweekendnights' y 'staysinweeknights'.")
-            else:
-                self.logger.write_line("No se pudo crear la columna 'totalnights' porque faltan columnas necesarias.")
+        # Eliminar Undefined en la columna distribution_channel
+        dataset1 = dataset1[dataset1['distribution_channel'] != 'Undefined']
 
-            # Ordenar los datos por la columna 'totalnights'
-            if 'totalnights' in data.columns:
-                data.sort_values(by='totalnights', ascending=False, inplace=True)
-                self.logger.write_line("Datos ordenados por la columna 'totalnights'.")
+        # Eliminar filas mayores de 6 previous_cancellations
+        dataset1.drop(dataset1[dataset1['previous_cancellations'] > 6].index, inplace=True)
 
-            self.logger.write_line("Limpieza de datos completada.")
-            return data
-        except Exception as e:
-            self.logger.write_line(f"Error durante la limpieza: {e}")
-            return data  # Devolver el DataFrame original en caso de error
+        # Eliminar filas mayores de 4 previous_bookings_not_canceled
+        dataset1.drop(dataset1[dataset1['previous_bookings_not_canceled'] > 4].index, inplace=True)
+
+        # Eliminar files con booking_changes > 5
+        dataset1.drop(dataset1[dataset1['booking_changes'] > 5].index, inplace=True)
+
+        #  Rellenar agent con la moda
+        dataset1['agent'].fillna(dataset1['agent'].mode()[0], inplace=True)
+
+        # Borrar la columna company
+        dataset1.drop(columns=['company'], inplace=True)
+
+        # Obtener la media de la frecuencia de la columna days_in_waiting_list y reemplazar los que tenga frecuencia menor a la media
+        value_counts_mean = dataset1['days_in_waiting_list'].value_counts().mean()
+        condition = dataset1['days_in_waiting_list'].map(dataset1['days_in_waiting_list'].value_counts()) < value_counts_mean
+        dataset1.loc[condition, 'days_in_waiting_list'] = int(dataset1['days_in_waiting_list'].mean())
+
+        # Reemplazar por promedio si es menor igual a cero o esta a +-dos desviaciones en adr
+        std_dev_adr = dataset1['adr'].std()
+        mean_adr = dataset1['adr'].mean()
+        lower_bound = mean_adr - 2 * std_dev_adr
+        upper_bound = mean_adr + 2 * std_dev_adr
+        dataset1.loc[(dataset1['adr'] <= 0) | (dataset1['adr'] < lower_bound) | (dataset1['adr'] > upper_bound), 'adr'] = mean_adr
+        
+        # reservation_status_date Obtener la media de la frecuencia y borrar los menores a esta.
+        counts = dataset1['reservation_status_date'].value_counts()
+        mean_frequency = counts.mean()
+        valid_values = counts[counts >= mean_frequency].index
+        dataset1 = dataset1[dataset1['reservation_status_date'].isin(valid_values)]
+
+        self.logger.write_line("Limpiando hotel_revenue_historical.xlsx...")
+
+        self.logger.write_line("Limpiando hotel_bookings_data.json...")
+        return self.datasets
 
     def undo(self):
-        self.logger.write_line("No se puede deshacer la limpieza de datos.")
+        pass
+
+
+if __name__ == '__main__':
+    from debug_logger import DebugLogger
+    from extract_all_datasets import ExtractAllDatasetsCommand
+    logger = DebugLogger()
+    datasets = ExtractAllDatasetsCommand(logger).execute()
+    cleanCommand = CleanDataCommand(logger, datasets)
+    datasets = cleanCommand.execute()
+    datasets['hotel_booking_demand.csv'].to_csv('hotel_booking_demand_cleaned.csv', index=False)
