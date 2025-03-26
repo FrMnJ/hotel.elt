@@ -4,7 +4,7 @@ from command import Command
 class ExtractCommand(Command):
     def __init__(self, logger, dataset_path):
         super().__init__(logger)
-        self.dataset_path = dataset_path
+        self.dataset_path = "./datasets/"+dataset_path
         self.data = None
 
     def execute(self):
