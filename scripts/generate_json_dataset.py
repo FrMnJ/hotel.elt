@@ -65,7 +65,7 @@ def generate_dirty_data(n=100):
             "previous_cancellations": random.randint(0, 5),
             "required_card_parking_spaces": random.randint(0, 2),
             "reservation_status": random.choice(["Canceled", "Check-Out", "No-Show"]),
-            "reservation_status_date": fake.date_between(datetime.date(int(arrivalYear), MONTHS[arrivalMonth], arrivalDayMonth), datetime.date(2024, 12, 31)),
+            "reservation_status_date": fake.date_between(datetime.date(int(arrivalYear), MONTHS[arrivalMonth], arrivalDayMonth), datetime.date(2024, 12, 31)).strftime("%d-%m-%Y"),
             "reserved_room_type": random.choice(["A", "B", "C"]),
             "stays_in_weekend_nights": random.randint(0, 3),
             "stays_in_week_nights": random.randint(0, 5),
