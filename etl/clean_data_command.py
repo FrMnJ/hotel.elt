@@ -73,6 +73,12 @@ class CleanDataCommand(Command):
         dataset1.drop_duplicates(inplace=True)
         # Reemplazar null con 0.0 in required_car_parking_spaces
         dataset1.loc[dataset1['required_car_parking_spaces'].isnull(), 'required_car_parking_spaces'] = 0.0
+
+        dataset1['total_guests'] = dataset1['adults'] + dataset1['children'] + dataset1['babies']
+        dataset1['is_long_stay'] = dataset1['stays_in_weekend_nights'] + dataset1['stays_in_week_nights'] > 7
+        dataset1['total_nights'] = dataset1['stays_in_weekend_nights'] + dataset1['stays_in_week_nights']
+        self.datasets['hotel_booking_demand.csv'] = dataset1
+
         ## Añadir el dataset limpio devuelta al diccionario
         self.datasets['hotel_booking_demand.csv'] = dataset1
 
@@ -118,6 +124,11 @@ class CleanDataCommand(Command):
         dataset2 = dataset2.drop_duplicates()
         # Reemplazar null con 0.0 in required_car_parking_spaces
         dataset1.loc[dataset1['required_car_parking_spaces'].isnull(), 'required_car_parking_spaces'] = 0.0
+
+        dataset2['total_guests'] = dataset2['adults'] + dataset2['children'] + dataset2['babies']
+        dataset2['is_long_stay'] = dataset2['stays_in_weekend_nights'] + dataset2['stays_in_week_nights'] > 7
+        dataset2['total_nights'] = dataset2['stays_in_weekend_nights'] + dataset2['stays_in_week_nights']
+        self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
 
         self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
         
@@ -165,6 +176,11 @@ class CleanDataCommand(Command):
 
         # Reemplazar null con 0.0 in required_car_parking_spaces
         dataset3['required_car_parking_spaces'].fillna(0.0, inplace=True)
+
+        dataset3['total_guests'] = dataset3['adults'] + dataset3['children'] + dataset3['babies']
+        dataset3['is_long_stay'] = dataset3['stays_in_weekend_nights'] + dataset3['stays_in_week_nights'] > 7
+        dataset3['total_nights'] = dataset3['stays_in_weekend_nights'] + dataset3['stays_in_week_nights']
+        self.datasets['hotel_bookings_data.json'] = dataset3
 
         self.datasets['hotel_bookings_data.json'] = dataset3
 
