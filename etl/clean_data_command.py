@@ -15,7 +15,7 @@ class CleanDataCommand(Command):
         dataset1.drop_duplicates(inplace=True)
 
         # Eliminar los valores nulos
-        dataset1.dropna(inplace=True)
+        #dataset1.dropna(inplace=True)
 
         # Mayores al promedio reemplazados por la media
         dataset1.loc[dataset1['lead_time'] > dataset1['lead_time'].mean(), 'lead_time'] = int(dataset1['lead_time'].mean())
@@ -47,6 +47,9 @@ class CleanDataCommand(Command):
         #  Rellenar agent con la moda
         dataset1['agent'].fillna(dataset1['agent'].mode()[0], inplace=True)
 
+        # Eliminar filas nulas en 'country'
+        dataset1 = dataset1.dropna(subset=['country'])
+
         # Borrar la columna company
         dataset1.drop(columns=['company'], inplace=True)
 
@@ -67,6 +70,11 @@ class CleanDataCommand(Command):
         mean_frequency = counts.mean()
         valid_values = counts[counts >= mean_frequency].index
         dataset1 = dataset1[dataset1['reservation_status_date'].isin(valid_values)]
+
+        dataset1.drop_duplicates(inplace=True)
+        ## Añadir el dataset limpio devuelta al diccionario
+        self.datasets['hotel_booking_demand.csv'] = dataset1
+
 
         # Limpiando hotel_revenue_historical_full.xlsx
         self.logger.write_line("Limpiando hotel_revenue_historical_full.xlsx...")
@@ -105,7 +113,8 @@ class CleanDataCommand(Command):
         
         # Eliminar la columna 'company'
         dataset2 = dataset2.drop(columns=['company'])
-        
+
+        dataset2 = dataset2.drop_duplicates()
         self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
         
 
