@@ -117,40 +117,47 @@ class CleanDataCommand(Command):
         dataset2 = dataset2.drop_duplicates()
         self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
         
-
-                # Limpiando hotel_bookings_data.json
+        # Limpiando hotel_bookings_data.json
         self.logger.write_line("Limpiando hotel_bookings_data.json...")
         dataset3 = self.datasets['hotel_bookings_data.json']
 
-        # Eliminar valores nulos en adr
-        dataset3.dropna(subset=['adr'], inplace=True)
+        # Eliminamos todas las filas que tenían valores vacíos (nulos) en la columna adr usando .notna().
+        # Esto nos asegura trabajar solo con datos completos en esa columna, ya que adr representa el precio
+        # promedio por noche y es un valor clave para cualquier análisis relacionado con ingresos, tarifas o rendimiento financiero.
+        # Como no tiene sentido estimar este valor sin una base sólida, preferimos eliminar esas filas para mantener la calidad del análisis.
+        dataset3 = dataset3[dataset3['adr'].notna()]
 
-        # Eliminar 'INVALID_MONTH' en arrival_date_month
-        dataset3 = dataset3[dataset3['arrival_date_month'] != 'INVALID_MONTH']
+        # Cambiamos el texto 'INVALID_MONTH' por un valor nulo, y después quitamos esas filas.
+        # Así nos aseguramos de quedarnos solo con meses válidos.
+        dataset3['arrival_date_month'] = dataset3['arrival_date_month'].replace('INVALID_MONTH', pd.NA)
+        dataset3 = dataset3[dataset3['arrival_date_month'].notna()]
 
-        # Eliminar valores 'XX' en assigned_room_type
-        dataset3 = dataset3[dataset3['assigned_room_type'] != 'XX']
+        # Filtramos todas las filas donde el tipo de habitación empieza con 'X' (que significa que está mal).
+        # Esto lo hicimos con una función que detecta si una cadena empieza con cierta letra.
+        dataset3 = dataset3[~dataset3['assigned_room_type'].str.startswith('X', na=False)]
 
-        # Eliminar valores 'UNKNOWN' en deposit_type
-        dataset3 = dataset3[dataset3['deposit_type'] != 'UNKNOWN']
+        # Reemplazamos el valor 'UNKNOWN' en la columna 'deposit_type' por algo más entendible: 'Otro'.
+        # Así evitamos quedarnos con categorías sin sentido.
+        dataset3['deposit_type'] = dataset3['deposit_type'].replace('UNKNOWN', 'Otro')
 
-        # Eliminar filas donde company esté vacía o nula
-        if 'company' in dataset3.columns:
-            dataset3.dropna(subset=['company'], inplace=True)
+        # En 'company', donde faltaban datos, pusimos el texto 'NO_COMPANY' como relleno.
+        # Lo hicimos con una función que elige el dato original si existe, y si no, usa uno nuevo.
+        dataset3['company'] = dataset3['company'].combine_first(pd.Series('NO_COMPANY', index=dataset3.index))
 
-        # Eliminar 'INVALID_COUNTRY' en country
-        dataset3 = dataset3[dataset3['country'] != 'INVALID_COUNTRY']
+        # Quitamos las filas donde el país fuera 'INVALID_COUNTRY', usando una función que revisa coincidencias exactas de texto.
+        # Así nos aseguramos de trabajar solo con países válidos.
+        dataset3 = dataset3[~dataset3['country'].str.fullmatch('INVALID_COUNTRY', na=False)]
 
-        # Reemplazar lead_time > promedio por la media
-        lead_time_mean = dataset3['lead_time'].mean()
-        dataset3.loc[dataset3['lead_time'] > lead_time_mean, 'lead_time'] = lead_time_mean
+        # En la columna 'lead_time', bajamos los valores que eran demasiado altos al nivel de la mediana.
+        # Lo hicimos con una función que revisa uno por uno y los ajusta si se pasan de la raya.        
+        median_lt = dataset3['lead_time'].median()
+        dataset3['lead_time'] = dataset3['lead_time'].transform(lambda x: x if x <= median_lt else median_lt)
 
-        # Convertir reservation_status_date a datetime yyyy-mm-dd
-        dataset3['reservation_status_date'] = pd.to_datetime(dataset3['reservation_status_date'], errors='coerce')
-        dataset3.dropna(subset=['reservation_status_date'], inplace=True)
-
-        # Reset index si se han eliminado muchas filas
-        dataset3.reset_index(drop=True, inplace=True)
+        # Cambiamos las fechas a formato de fecha real, y luego ordenamos el dataset de más antiguo a más reciente.
+        # Así es más fácil analizar por tiempo y asegurarse que todo esté en orden.
+        dataset3['reservation_status_date'] = dataset3['reservation_status_date'].astype('datetime64[ns]', errors='ignore')
+        dataset3 = dataset3[dataset3['reservation_status_date'].notna()]
+        dataset3 = dataset3.sort_values(by='reservation_status_date')
 
         self.datasets['hotel_bookings_data.json'] = dataset3
 
