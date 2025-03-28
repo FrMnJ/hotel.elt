@@ -1,13 +1,12 @@
 import pandas as pd
 from command import Command
-from extract_command import ExtractCommand
 
 class CleanDataCommand(Command):
-    def __init__(self, logger, datasets: dict):
+    def __init__(self, logger):
         super().__init__(logger)
-        self.datasets = datasets
 
-    def execute(self):
+    def execute(self, datasets):
+        self.datasets = datasets
         self.logger.write_line("Limpiando hotel_booking_demand.csv...")
         dataset1 = self.datasets['hotel_booking_demand.csv'] 
         
@@ -72,6 +71,8 @@ class CleanDataCommand(Command):
         dataset1 = dataset1[dataset1['reservation_status_date'].isin(valid_values)]
 
         dataset1.drop_duplicates(inplace=True)
+        # Reemplazar null con 0.0 in required_car_parking_spaces
+        dataset1.loc[dataset1['required_car_parking_spaces'].isnull(), 'required_car_parking_spaces'] = 0.0
         ## Añadir el dataset limpio devuelta al diccionario
         self.datasets['hotel_booking_demand.csv'] = dataset1
 
@@ -115,6 +116,9 @@ class CleanDataCommand(Command):
         dataset2 = dataset2.drop(columns=['company'])
 
         dataset2 = dataset2.drop_duplicates()
+        # Reemplazar null con 0.0 in required_car_parking_spaces
+        dataset1.loc[dataset1['required_car_parking_spaces'].isnull(), 'required_car_parking_spaces'] = 0.0
+
         self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
         
         # Limpiando hotel_bookings_data.json
@@ -140,9 +144,9 @@ class CleanDataCommand(Command):
         # Así evitamos quedarnos con categorías sin sentido.
         dataset3['deposit_type'] = dataset3['deposit_type'].replace('UNKNOWN', 'Otro')
 
-        # En 'company', donde faltaban datos, pusimos el texto 'NO_COMPANY' como relleno.
-        # Lo hicimos con una función que elige el dato original si existe, y si no, usa uno nuevo.
-        dataset3['company'] = dataset3['company'].combine_first(pd.Series('NO_COMPANY', index=dataset3.index))
+
+        # Eliminamos la columna 'company'
+        dataset3.drop(columns=['company'], inplace=True)
 
         # Quitamos las filas donde el país fuera 'INVALID_COUNTRY', usando una función que revisa coincidencias exactas de texto.
         # Así nos aseguramos de trabajar solo con países válidos.
@@ -159,10 +163,12 @@ class CleanDataCommand(Command):
         dataset3 = dataset3[dataset3['reservation_status_date'].notna()]
         dataset3 = dataset3.sort_values(by='reservation_status_date')
 
+        # Reemplazar null con 0.0 in required_car_parking_spaces
+        dataset3['required_car_parking_spaces'].fillna(0.0, inplace=True)
+
         self.datasets['hotel_bookings_data.json'] = dataset3
 
-        
-        return self.datasets
+        return pd.concat(self.datasets.values(), ignore_index=True)
 
     def undo(self):
         pass

@@ -11,3 +11,7 @@
 #log-container {
     padding: 1;
 }
+
+.hidden{
+    display: none; 
+}
