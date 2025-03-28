@@ -68,9 +68,50 @@ class CleanDataCommand(Command):
         valid_values = counts[counts >= mean_frequency].index
         dataset1 = dataset1[dataset1['reservation_status_date'].isin(valid_values)]
 
-        self.logger.write_line("Limpiando hotel_revenue_historical.xlsx...")
+        # Limpiando hotel_revenue_historical_full.xlsx
+        self.logger.write_line("Limpiando hotel_revenue_historical_full.xlsx...")
+        dataset2 = self.datasets['hotel_revenue_historical_full.xlsx']
+        
+        # Eliminar duplicados
+        dataset2 = dataset2.drop_duplicates()
+        
+        # Ajustar 'lead_time'
+        lead_time_mean = dataset2['lead_time'].mean()
+        dataset2.loc[dataset2['lead_time'] > lead_time_mean, 'lead_time'] = lead_time_mean
+        
+        # Eliminar filas con 0 en 'adults'
+        dataset2 = dataset2[dataset2['adults'] != 0]
+        
+        # Eliminar filas nulas en 'children'
+        dataset2 = dataset2.dropna(subset=['children'])
+        
+        # Eliminar filas con más de 2 babies
+        dataset2 = dataset2.drop(dataset2[dataset2['babies'] > 2].index)
+        
+        # Filtrar 'meal' diferente de 'Undefined'
+        dataset2 = dataset2[dataset2['meal'] != 'Undefined']
+        
+        # Eliminar filas nulas en 'country'
+        dataset2 = dataset2.dropna(subset=['country'])
+        
+        # Filtrar market_segment diferente de 'Undefined'
+        dataset2 = dataset2[dataset2['market_segment'] != 'Undefined']
+        
+        # Filtrar distribution_channel diferente de 'Undefined'
+        dataset2 = dataset2[dataset2['distribution_channel'] != 'Undefined']
+        
+        # Eliminar filas nulas en 'agent'
+        dataset2 = dataset2.dropna(subset=['agent'])
+        
+        # Eliminar la columna 'company'
+        dataset2 = dataset2.drop(columns=['company'])
+        
+        self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
+        
 
         self.logger.write_line("Limpiando hotel_bookings_data.json...")
+
+        
         return self.datasets
 
     def undo(self):
@@ -85,3 +126,4 @@ if __name__ == '__main__':
     cleanCommand = CleanDataCommand(logger, datasets)
     datasets = cleanCommand.execute()
     datasets['hotel_booking_demand.csv'].to_csv('hotel_booking_demand_cleaned.csv', index=False)
+    datasets['hotel_revenue_historical_full.xlsx'].to_excel('hotel_revenue_historical_full_cleaned.xlsx', index=False)
