@@ -118,7 +118,41 @@ class CleanDataCommand(Command):
         self.datasets['hotel_revenue_historical_full.xlsx'] = dataset2
         
 
+                # Limpiando hotel_bookings_data.json
         self.logger.write_line("Limpiando hotel_bookings_data.json...")
+        dataset3 = self.datasets['hotel_bookings_data.json']
+
+        # Eliminar valores nulos en adr
+        dataset3.dropna(subset=['adr'], inplace=True)
+
+        # Eliminar 'INVALID_MONTH' en arrival_date_month
+        dataset3 = dataset3[dataset3['arrival_date_month'] != 'INVALID_MONTH']
+
+        # Eliminar valores 'XX' en assigned_room_type
+        dataset3 = dataset3[dataset3['assigned_room_type'] != 'XX']
+
+        # Eliminar valores 'UNKNOWN' en deposit_type
+        dataset3 = dataset3[dataset3['deposit_type'] != 'UNKNOWN']
+
+        # Eliminar filas donde company esté vacía o nula
+        if 'company' in dataset3.columns:
+            dataset3.dropna(subset=['company'], inplace=True)
+
+        # Eliminar 'INVALID_COUNTRY' en country
+        dataset3 = dataset3[dataset3['country'] != 'INVALID_COUNTRY']
+
+        # Reemplazar lead_time > promedio por la media
+        lead_time_mean = dataset3['lead_time'].mean()
+        dataset3.loc[dataset3['lead_time'] > lead_time_mean, 'lead_time'] = lead_time_mean
+
+        # Convertir reservation_status_date a datetime yyyy-mm-dd
+        dataset3['reservation_status_date'] = pd.to_datetime(dataset3['reservation_status_date'], errors='coerce')
+        dataset3.dropna(subset=['reservation_status_date'], inplace=True)
+
+        # Reset index si se han eliminado muchas filas
+        dataset3.reset_index(drop=True, inplace=True)
+
+        self.datasets['hotel_bookings_data.json'] = dataset3
 
         
         return self.datasets
@@ -136,3 +170,4 @@ if __name__ == '__main__':
     datasets = cleanCommand.execute()
     datasets['hotel_booking_demand.csv'].to_csv('hotel_booking_demand_cleaned.csv', index=False)
     datasets['hotel_revenue_historical_full.xlsx'].to_excel('hotel_revenue_historical_full_cleaned.xlsx', index=False)
+    datasets['hotel_bookings_data.json'].to_json('hotel_bookings_data_cleaned.json', index=False)
