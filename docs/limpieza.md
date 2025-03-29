@@ -34,3 +34,7 @@
 ## Dataset 3: 
 
 - **replace()**: Reemplaza los valores por otros de manera dinamica.
+
+- **transform()** : Aplica una función a los valores de una columna.
+
+- **astype()** : Castea los valores de una columna a otro tipo de dato dtype.
