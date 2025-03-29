@@ -4,6 +4,12 @@ Este repositorio contiene un proyecto ETL diseñado para extraer, limpiar y carg
 # Objetivo de estudio
 Predecir la probabilidad de que un cliente cancele una reservación con el objetivo de reducir la pérdida de ingresos de los hoteles. Al poder predecir podemos plantear estrategias para reducir el porcentaje de cancelación.
 
+## Ejecución
+```
+pip install -r requirements.txt
+python .\etl\main.py
+```
+
 ## Metodología de recolección
 Los datasets se buscaron en la plataforma Kaggle .
 
