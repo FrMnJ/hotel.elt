@@ -1,4 +1,7 @@
-# Objetivo
+# Resumen
+Este repositorio contiene un proyecto ETL diseñado para extraer, limpiar y cargar datos en diferentes formatos según lo indique el usuario. Los formatos soportados incluyen CSV, JSON, EXCEL, y también permite la conexión y carga a una base de datos PostgreSQL.
+
+# Objetivo de estudio
 Predecir la probabilidad de que un cliente cancele una reservación con el objetivo de reducir la pérdida de ingresos de los hoteles. Al poder predecir podemos plantear estrategias para reducir el porcentaje de cancelación.
 
 ## Metodología de recolección
