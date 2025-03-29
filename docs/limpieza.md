@@ -18,3 +18,19 @@
 
 - **pop()**: Elimina una columna. 
   `dataset1.pop('company')`
+
+## Dataset 2: hotel_revenue_historical_full.xlsx
+
+- **loc()**: Acceda a un grupo de filas y columnas por etiqueta(s) o una matriz booleana.
+
+- **std()** : Calcula la desviación estandar.
+
+- **mean()** : Calcula el promedio.
+
+- **dropna()** : Elimina las filas con NA.
+
+- **drop_duplicates()**: Elimina las filas repetidas.
+
+## Dataset 3: 
+
+- **replace()**: Reemplaza los valores por otros de manera dinamica.
