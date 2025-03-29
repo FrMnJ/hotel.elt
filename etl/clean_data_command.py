@@ -7,82 +7,76 @@ class CleanDataCommand(Command):
 
     def execute(self, datasets):
         self.datasets = datasets
-        self.logger.write_line("Limpiando hotel_booking_demand.csv...")
-        dataset1 = self.datasets['hotel_booking_demand.csv'] 
-        
-        # Eliminar los duplicados
-        dataset1.drop_duplicates(inplace=True)
 
-        # Eliminar los valores nulos
-        #dataset1.dropna(inplace=True)
+        ## TODO: DATASET 1
+
+        self.logger.write_line("Limpiando hotel_booking_demand.csv...")
+        dataset1 = self.datasets['hotel_booking_demand.csv']
+
+        # Eliminar duplicados
+        dataset1 = dataset1.where(~dataset1.duplicated())
 
         # Mayores al promedio reemplazados por la media
-        dataset1.loc[dataset1['lead_time'] > dataset1['lead_time'].mean(), 'lead_time'] = int(dataset1['lead_time'].mean())
+        dataset1['lead_time'] = dataset1['lead_time'].where(dataset1['lead_time'] <= dataset1['lead_time'].mean(), int(dataset1['lead_time'].mean()))
 
-        # Eliminar filas con 0 adultos y > 10
-        dataset1 = dataset1[(dataset1['adults'] > 0) | (dataset1['adults'] <= 10)]
+        # Eliminar filas con 0 adultos o más de 10
+        dataset1 = dataset1.query("0 < adults <= 10")
 
-        # Eliminar files con más de 2 babies
-        dataset1.drop(dataset1[dataset1['babies'] > 2].index, inplace=True)
+        # Eliminar filas con más de 2 babies
+        dataset1 = dataset1.query("babies <= 2")
 
-        # Eliminar Undefined en la columna meal
-        dataset1 = dataset1[dataset1['meal'] != 'Undefined']
+        # Eliminar filas con Undefined
+        dataset1 = dataset1[~dataset1['meal'].isin(['Undefined'])]
+        dataset1 = dataset1[~dataset1['market_segment'].isin(['Undefined'])]
+        dataset1 = dataset1[~dataset1['distribution_channel'].isin(['Undefined'])]
 
-        # Eliminar Undefined en la columna market_segment
-        dataset1 = dataset1[dataset1['market_segment'] != 'Undefined']
+        # Eliminar filas con valores mayores a 6 en previous_cancellations y a mayores a 4 revious_bookings_not_canceled
+        dataset1 = dataset1.query("previous_cancellations <= 6")
+        dataset1 = dataset1.query("previous_bookings_not_canceled <= 4")
+        
+        # Eliminar filas con valores mayores a 5 en booking_changes
+        dataset1 = dataset1.query("booking_changes <= 5")
 
-        # Eliminar Undefined en la columna distribution_channel
-        dataset1 = dataset1[dataset1['distribution_channel'] != 'Undefined']
+        # Rellenar agent con la moda
+        mode_value = dataset1['agent'].mode()[0]
+        dataset1['agent'] = dataset1['agent'].apply(lambda x: mode_value if pd.isna(x) else x)
 
-        # Eliminar filas mayores de 6 previous_cancellations
-        dataset1.drop(dataset1[dataset1['previous_cancellations'] > 6].index, inplace=True)
-
-        # Eliminar filas mayores de 4 previous_bookings_not_canceled
-        dataset1.drop(dataset1[dataset1['previous_bookings_not_canceled'] > 4].index, inplace=True)
-
-        # Eliminar files con booking_changes > 5
-        dataset1.drop(dataset1[dataset1['booking_changes'] > 5].index, inplace=True)
-
-        #  Rellenar agent con la moda
-        dataset1['agent'].fillna(dataset1['agent'].mode()[0], inplace=True)
-
-        # Eliminar filas nulas en 'country'
-        dataset1 = dataset1.dropna(subset=['country'])
+        # Eliminar filas con valores nulos en country
+        dataset1 = dataset1.query('country.notna()', engine='python')
 
         # Borrar la columna company
-        dataset1.drop(columns=['company'], inplace=True)
+        dataset1.pop('company') 
 
-        # Obtener la media de la frecuencia de la columna days_in_waiting_list y reemplazar los que tenga frecuencia menor a la media
-        value_counts_mean = dataset1['days_in_waiting_list'].value_counts().mean()
-        condition = dataset1['days_in_waiting_list'].map(dataset1['days_in_waiting_list'].value_counts()) < value_counts_mean
-        dataset1.loc[condition, 'days_in_waiting_list'] = int(dataset1['days_in_waiting_list'].mean())
+        # Reemplazar valores menores en days_in_waiting_list con la media
+        days_freq_mean = dataset1['days_in_waiting_list'].value_counts().mean()
+        dataset1['days_in_waiting_list'] = dataset1['days_in_waiting_list'].where(
+            dataset1['days_in_waiting_list'].map(dataset1['days_in_waiting_list'].value_counts()) >= days_freq_mean,
+            int(dataset1['days_in_waiting_list'].mean())
+        )
 
-        # Reemplazar por promedio si es menor igual a cero o esta a +-dos desviaciones en adr
+        # Reemplazar valores menores e igual a 0 o a 2 de desviación estándar en adr con la media
         std_dev_adr = dataset1['adr'].std()
         mean_adr = dataset1['adr'].mean()
         lower_bound = mean_adr - 2 * std_dev_adr
         upper_bound = mean_adr + 2 * std_dev_adr
-        dataset1.loc[(dataset1['adr'] <= 0) | (dataset1['adr'] < lower_bound) | (dataset1['adr'] > upper_bound), 'adr'] = mean_adr
-        
-        # reservation_status_date Obtener la media de la frecuencia y borrar los menores a esta.
-        counts = dataset1['reservation_status_date'].value_counts()
-        mean_frequency = counts.mean()
-        valid_values = counts[counts >= mean_frequency].index
-        dataset1 = dataset1[dataset1['reservation_status_date'].isin(valid_values)]
+        dataset1['adr'] = dataset1['adr'].where((dataset1['adr'] > 0) & (dataset1['adr'].between(lower_bound, upper_bound)), mean_adr)
 
-        dataset1.drop_duplicates(inplace=True)
-        # Reemplazar null con 0.0 in required_car_parking_spaces
-        dataset1.loc[dataset1['required_car_parking_spaces'].isnull(), 'required_car_parking_spaces'] = 0.0
+        # Eliminar fechas de reservation_status_date con frecuencia inferior a la media
+        reservation_counts = dataset1['reservation_status_date'].value_counts()
+        dataset1 = dataset1[dataset1['reservation_status_date'].isin(reservation_counts[reservation_counts >= reservation_counts.mean()].index)]
 
+        # Reemplazar valores nulos en required_car_parking_spaces con 0.0
+        dataset1['required_car_parking_spaces'] = dataset1['required_car_parking_spaces'].apply(lambda x: 0.0 if pd.isna(x) else x)
+
+        # Crear nuevas columnas derivadas
         dataset1['total_guests'] = dataset1['adults'] + dataset1['children'] + dataset1['babies']
-        dataset1['is_long_stay'] = dataset1['stays_in_weekend_nights'] + dataset1['stays_in_week_nights'] > 7
+        dataset1['is_long_stay'] = (dataset1['stays_in_weekend_nights'] + dataset1['stays_in_week_nights']) > 7
         dataset1['total_nights'] = dataset1['stays_in_weekend_nights'] + dataset1['stays_in_week_nights']
+
+        # Guardar cambios en el dataset
         self.datasets['hotel_booking_demand.csv'] = dataset1
 
-        ## Añadir el dataset limpio devuelta al diccionario
-        self.datasets['hotel_booking_demand.csv'] = dataset1
-
-
+        ###
         # Limpiando hotel_revenue_historical_full.xlsx
         self.logger.write_line("Limpiando hotel_revenue_historical_full.xlsx...")
         dataset2 = self.datasets['hotel_revenue_historical_full.xlsx']
@@ -183,6 +177,8 @@ class CleanDataCommand(Command):
         self.datasets['hotel_bookings_data.json'] = dataset3
 
         self.datasets['hotel_bookings_data.json'] = dataset3
+
+        ###
 
         return pd.concat(self.datasets.values(), ignore_index=True)
 
