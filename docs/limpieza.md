@@ -21,15 +21,31 @@
 
 ## Dataset 2: hotel_revenue_historical_full.xlsx
 
-- **loc()**: Acceda a un grupo de filas y columnas por etiqueta(s) o una matriz booleana.
+- **loc()**: Accede a un grupo de filas y columnas por etiqueta(s) o mediante una matriz booleana. Por ejemplo, se usa para ajustar valores en la columna "lead_time":
+  `dataset2.loc[dataset2['lead_time'] > lead_time_mean, 'lead_time'] = lead_time_mean`
 
-- **std()** : Calcula la desviación estandar.
+- **mean()**: Calcula el promedio de los valores de una columna. Por ejemplo, se utiliza para obtener el promedio de "lead_time":
+  `lead_time_mean = dataset2['lead_time'].mean()`
 
-- **mean()** : Calcula el promedio.
+- **drop_duplicates()**: Elimina filas duplicadas del dataframe.
+  `dataset2 = dataset2.drop_duplicates()`
 
-- **dropna()** : Elimina las filas con NA.
+- **dropna()**: Elimina filas que contengan valores NA en las columnas especificadas. Se aplica, por ejemplo, para eliminar filas nulas en "children" o "country" o "agent":
+  `dataset2 = dataset2.dropna(subset=['children'])`
 
-- **drop_duplicates()**: Elimina las filas repetidas.
+- **drop()**: Se utiliza para eliminar filas o columnas. En este caso, se elimina:
+  - Filas donde "babies" es mayor a 2:
+    `dataset2 = dataset2.drop(dataset2[dataset2['babies'] > 2].index)`
+  - La columna "company":
+    `dataset2 = dataset2.drop(columns=['company'])`
+
+- **Filtrado mediante condiciones booleanas**: Se filtran filas usando condiciones directamente en el dataframe. Por ejemplo:
+  - Eliminar filas con 0 en "adults":
+    `dataset2 = dataset2[dataset2['adults'] != 0]`
+  - Filtrar filas donde "meal", "market_segment" y "distribution_channel" sean diferentes de "Undefined":
+    `dataset2 = dataset2[dataset2['meal'] != 'Undefined']`
+    `dataset2 = dataset2[dataset2['market_segment'] != 'Undefined']`
+    `dataset2 = dataset2[dataset2['distribution_channel'] != 'Undefined']`
 
 ## Dataset 3: 
 
