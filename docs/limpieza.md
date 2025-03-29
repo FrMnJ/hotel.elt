@@ -19,6 +19,7 @@
 - **pop()**: Elimina una columna. 
   `dataset1.pop('company')`
 
+
 ## Dataset 2: hotel_revenue_historical_full.xlsx
 
 - **loc()**: Accede a un grupo de filas y columnas por etiqueta(s) o mediante una matriz booleana. Por ejemplo, se usa para ajustar valores en la columna "lead_time":
@@ -47,10 +48,48 @@
     `dataset2 = dataset2[dataset2['market_segment'] != 'Undefined']`
     `dataset2 = dataset2[dataset2['distribution_channel'] != 'Undefined']`
 
-## Dataset 3: 
 
-- **replace()**: Reemplaza los valores por otros de manera dinamica.
+## Dataset 3: hotel_bookings_data.json
 
-- **transform()** : Aplica una función a los valores de una columna.
+- **notna()**: Filtra filas para trabajar solo con registros completos.  
+  Se utiliza para asegurar que las columnas "adr", "arrival_date_month" y "reservation_status_date" no tengan valores nulos.  
+  `dataset3 = dataset3[dataset3['adr'].notna()]`  
+  `dataset3 = dataset3[dataset3['arrival_date_month'].notna()]`  
+  `dataset3 = dataset3[dataset3['reservation_status_date'].notna()]`
 
-- **astype()** : Castea los valores de una columna a otro tipo de dato dtype.
+- **replace()**: Reemplaza valores específicos en una columna por otros.  
+  Se usa para cambiar 'INVALID_MONTH' a pd.NA en "arrival_date_month" y 'UNKNOWN' a 'Otro' en "deposit_type".  
+  `dataset3['arrival_date_month'] = dataset3['arrival_date_month'].replace('INVALID_MONTH', pd.NA)`  
+  `dataset3['deposit_type'] = dataset3['deposit_type'].replace('UNKNOWN', 'Otro')`
+
+- **str.startswith()**: Verifica si los valores en una columna comienzan con una cadena dada.  
+  Se utiliza para excluir filas cuya "assigned_room_type" comienza con 'X'.  
+  `dataset3 = dataset3[~dataset3['assigned_room_type'].str.startswith('X', na=False)]`
+
+- **drop()**: Elimina columnas o filas del dataframe.  
+  Se usa con el parámetro "columns" para eliminar la columna "company".  
+  `dataset3.drop(columns=['company'], inplace=True)`
+
+- **str.fullmatch()**: Comprueba coincidencias exactas de una cadena en cada elemento de una columna.  
+  Se utiliza para descartar filas donde la columna "country" es exactamente "INVALID_COUNTRY".  
+  `dataset3 = dataset3[~dataset3['country'].str.fullmatch('INVALID_COUNTRY', na=False)]`
+
+- **median()**: Calcula la mediana de los valores de una columna.  
+  Se usa para obtener la mediana de "lead_time", que luego se utiliza para ajustar los valores excesivos.  
+  `median_lt = dataset3['lead_time'].median()`
+
+- **transform()**: Aplica una función a cada elemento de la serie.  
+  En este caso, se utiliza para reemplazar valores de "lead_time" que superen la mediana por dicha mediana.  
+  `dataset3['lead_time'] = dataset3['lead_time'].transform(lambda x: x if x <= median_lt else median_lt)`
+
+- **astype()**: Convierte los valores de una columna a un tipo de dato específico.  
+  Se utiliza para convertir "reservation_status_date" al tipo datetime.  
+  `dataset3['reservation_status_date'] = dataset3['reservation_status_date'].astype('datetime64[ns]', errors='ignore')`
+
+- **sort_values()**: Ordena las filas del dataframe según los valores de una o más columnas.  
+  Se usa para ordenar "reservation_status_date" de forma cronológica.  
+  `dataset3 = dataset3.sort_values(by='reservation_status_date')`
+
+- **fillna()**: Rellena los valores nulos en una columna con un valor dado.  
+  Se aplica en "required_car_parking_spaces" para reemplazar NaN por 0.0.  
+  `dataset3['required_car_parking_spaces'].fillna(0.0, inplace=True)`
